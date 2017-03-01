@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Main page</title>
+  </head>
+  <body>
+    <h1>Hello, I'm a page that has a framebuster!</h1>
+    <p id="message">Loading...</p>
+    <p id="message2"></p>
+
+    <script>
+      function displayFailedFramebuster() {
+        document.getElementById('message2').innerHTML = 'Hey! My framebuster powers did not work! :(';
+        document.getElementById('message2').style.backgroundColor = 'yellow';
+      }
+
+      if (window.self !== window.top) {
+        document.getElementById('message').innerHTML = 'It looks like I am embedded in an iframe, I do not like it! I will wait 5 seconds and then I will break out from this iframe.';
+
+        setTimeout(function() {
+          try {
+            window.top.location = window.self.location;
+          } catch (e) {
+            // Chrome and Firefox throw an error when the frame tries to change top's location without permission.
+            // Safari, Safari mobile and Chrome mobile don't.
+            // I didn't test on other browsers yet.
+            // There's a second timeout below that works as a workaround for this issue.
+            displayFailedFramebuster();
+          }
+        }, 5000);
+
+        // This timeout is for noticing if the page managed to break out from the iframe for browsers that doesn't
+        // throw an error when the location assignment fails.
+        setTimeout(function() {
+          console.log('foobar');
+          displayFailedFramebuster();
+        }, 5500);
+      } else {
+        document.getElementById('message').innerHTML = 'I am at the top frame and everything is OK!';
+        document.getElementById('message2').innerHTML = 'Do not forget to check the source code!';
+      }
+    </script>
+  </body>
+</html>

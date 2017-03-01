@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Framebusters</title>
+  </head>
+  <body>
+    <h1>Framebusters</h1>
+
+    <h3>How do they work?</h3>
+    <p>Check the page we want to embed in an iframe, it has a framebuster installed: <a href="framebuster.html">Click here</a>.</p>
+    <p>And here is a page that embeds the previous page in an iframe, but it does not have an anti-framebuster installed: <a href="page-without-anti-framebuster.html">Click here</a>.</p>
+
+    <h3>Anti-framebusters</h3>
+    <p>Here is a possible anti-framebuster implementation using the iframe's sandbox property: <a href="page-with-anti-framebuster.html">Click here</a>.</p>
+    <p>Check the iframe documentation on <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe">MDN</a>. For this specific experiment I used all flags but these two: <code>allow-same-origin</code> and <code>allow-top-navigation</code>.</p>
+    <p>But is this enough?</p>
+    <p>Well... It depends on what are our objectives. The <a href="https://fareoffice-jira.atlassian.net/browse/WK-447">Jira ticket</a> is a little vague. It says "...3DS to be useable at any bank..." and "...the Widget doesn't crash if my bank doesn't support 3D Secure".</p>
+    <p>The Widget will certainly not crash if the bank doesn't support 3DS. This already happens.</p>
+    <p>But we can't ensure 3DS will be useable at any bank. This is impossible:</p>
+    <ul>
+      <li>If the bank's 3DS page contains a framebuster we <strong>need</strong> to do something otherwise the whole page will be refreshed and we will lose the whole widget state, no booking will be performed and it will look very broken to the customer. So, if we use an anti-framebuster as described here then the 3DS page will remain inside the iframe and the booking may be completed.</li>
+      <li>But the bank's page can detect if the framebusting failed (we did this in our demo above by displaying an yellow message), and then it can modify itself in a way that the customer can't verify him/herself, making it impossible to complete the booking. But most important, the widget state is preserved, and the customer can hit the back button and try another card or pay locally, if available.</li>
+    </ul>
+
+    <p>There is another axis on this discussion, the existence of <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options">X-Frame-Options HTTP Header</a>. Banks can configure it in a way that totally prevents browsers to load a page inside an iframe. This will prevent a customer from completing the booking but he/she still can go back and try something different. The bad thing about this is we can't detect it didn' work, so the customer will see a blank screen where the 3DS page should appear until he/she clicks the back button.</p>
+
+    <p>Just to give you an example on how this works, let's use Facebook inside an iframe (they use <code>X-Frame-Options: DENY</code>): <a href="page-embed-facebook.html">Click here</a>.</p>
+
+    <h3>Conclusion</h3>
+    <p>If we use the proposed anti-framebuster we can prevent 3DS pages from totally breaking the widget, but we can't ensure that 3DS will always work. Banks still can detect (but not overcome) anti-framebusters and not allow users to identify themselves. This is still a good temporary solution, but...</p>
+    <p>The definitive solution to framebusters is to not use iframes at all for 3DS pages! This is much harder to do because we would need to:</p>
+    <ol>
+      <li>"Serialize" the widget state and store it somewhere (local storage? merchant data?).</li>
+      <li>Go to the 3DS page on the top frame (there are no iframes so no reason for 3DS pages to complain).</li>
+      <li>"Reconstruct" the widget state when redirect back from the 3DS authentication.</li>
+    </ol>
+    <p>And we also need cooperation from the widget hosts (sites and affinity partners) to be able to "serialize" and "reconstruct" their states as well.</p>
+
+    <h3>Appendix</h3>
+    <p>Here is a old but nice paper about framebusters: <a href="https://cdn.elie.net/publications/busting-frame-busting-a-study-of-clickjacking-vulnerabilities-on-popular-sites.pdf">Click here</a>.</p>
+  </body>
+</html>
